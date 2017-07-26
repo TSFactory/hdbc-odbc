@@ -6,6 +6,7 @@ module Database.HDBC.ODBC.Api.Errors
   ) where
 
 import Control.Monad (unless)
+import Data.List (intercalate)
 import Database.HDBC (SqlError (..), throwSqlError)
 import Database.HDBC.ODBC.Api.Imports
 import Database.HDBC.ODBC.Api.Types
@@ -24,7 +25,7 @@ raiseError msg code cconn = do
     throwSqlError SqlError
       { seState = show (map fst info)
       , seNativeError = fromIntegral code
-      , seErrorMsg = msg ++ ": " ++ show (map snd info)
+      , seErrorMsg = msg ++ ": [" ++ intercalate ", " (map snd info) ++ "]"
       }
   where
     (ht, hp) = case cconn of
