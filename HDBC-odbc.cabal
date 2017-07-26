@@ -57,6 +57,7 @@ library
     , HDBC>=2.1.0
     , time>=1.2.0.3
     , utf8-string
+    , text
     , bytestring
   c-sources:
       cbits/hdbc-odbc-helper.c

@@ -45,6 +45,8 @@ import System.IO (hPutStrLn, stderr)
 import Debug.Trace
 
 import qualified Data.Foldable as F
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 #ifdef mingw32_HOST_OS
 #include <windows.h>
@@ -316,13 +318,16 @@ bindSqlValue sqlValue = case sqlValue of
           }
     hdbcTrace $ "bind SqlByteString " ++ show bs ++ ": " ++ show result
     return $! result
-  -- | This is rather hacky, I just replicate the behaviour of a previous version
+  -- | First we convert a value to String using HDBC fromSql functio, then
+  -- make UTF-16 from it and then pass as WCHAR. This would only work on
+  -- Windows because only windows uses UTF-16 natively.
   x -> do
     hdbcTrace $ "bind other " ++ show x
-    bsResult <- bindSqlValue $ SqlByteString (fromSql x)
+    let value = T.encodeUtf16LE . T.pack $ fromSql x
+    bsResult <- bindSqlValue $ SqlByteString value
     let result = bsResult
-          { bvValueType         = #{const SQL_C_CHAR}
-          , bvDefaultColumnType = #{const SQL_CHAR}
+          { bvValueType         = #{const SQL_C_WCHAR}
+          , bvDefaultColumnType = #{const SQL_WCHAR}
           }
     hdbcTrace $ "bound other " ++ show x ++ ": " ++ show result
     return $! result
